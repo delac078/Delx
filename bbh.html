@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Child Health Tracker & Scheduler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #dbeafe;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --transition: all 0.2s ease-in-out;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: var(--gray-800);
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 10px 0;
+        }
+
+        header h1 {
+            color: var(--primary-dark);
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: var(--gray-700);
+            font-size: 1.1rem;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--gray-200);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.95rem;
+        }
+
+        input[type="date"], input[type="number"], select {
+            padding: 12px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        button.btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .alert {
+            background-color: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            color: #92400e;
+        }
+
+        .alert h4 {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .info-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .info-sub-card {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .info-sub-card h4 {
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: 8px;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .schedule-table th, .schedule-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .schedule-table th {
+            background-color: var(--gray-50);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .schedule-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .badge-due {
+            background-color: #fee2e2;
+            color: var(--danger);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-current {
+            background-color: #fef3c7;
+            color: #b45309;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-upcoming {
+            background-color: #e0f2fe;
+            color: var(--primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-done {
+            background-color: #d1fae5;
+            color: var(--success);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* Charts styling */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .chart-box {
+            background: #fff;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 15px;
+        }
+
+        canvas {
+            max-width: 100%;
+            background-color: #fff;
+            border-radius: 8px;
+        }
+
+        .info-panel {
+            background-color: var(--gray-50);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .malaria-card {
+            background: #eff6ff;
+            border: 1.5px dashed #bfdbfe;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Child Growth & Health Companion</h1>
+        <p>Calculate immunisation schedules, track WHO z-scores, and monitor supplementation up to 5 years</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('scheduler-tab', this)">📅 Immunisation Scheduler</button>
+        <button class="tab-btn" onclick="switchTab('growth-tab', this)">📈 Growth Chart Tracker (Z-Scores)</button>
+        <button class="tab-btn" onclick="switchTab('supplements-tab', this)">💊 Vitamin A & De-worming</button>
+    </div>
+
+    <!-- MAIN INPUT CARD -->
+    <div class="card">
+        <h3 style="margin-bottom: 15px; color: var(--primary-dark);">Child's Primary Information</h3>
+        <div class="grid-inputs">
+            <div class="input-group">
+                <label for="dob">Date of Birth:</label>
+                <input type="date" id="dob" required onchange="onDobChange()">
+            </div>
+            <div class="input-group">
+                <label for="gender">Gender:</label>
+                <select id="gender">
+                    <option value="girl">Girl</option>
+                    <option value="boy">Boy</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="height">Current Height / Length (cm):</label>
+                <input type="number" id="height" step="0.1" placeholder="e.g. 50">
+            </div>
+            <div class="input-group">
+                <label for="weight">Current Weight (kg):</label>
+                <input type="number" id="weight" step="0.1" placeholder="e.g. 3.5">
+            </div>
+        </div>
+        <div class="btn-container">
+            <button class="btn-primary" onclick="processAll()">Update All Records</button>
+        </div>
+    </div>
+
+    <!-- SCHEDULER TAB -->
+    <div id="scheduler-tab" class="tab-content">
+        <div id="results-card" class="card hidden">
+            <div class="alert">
+                <h4>⚠️ Important Immunisation Note</h4>
+                <p>If you do not see a vaccination scar from the <strong>BCG</strong> vaccine after 12 weeks from birth, please consult your healthcare provider to evaluate whether a repeat dose is necessary.</p>
+            </div>
+
+            <h3 style="margin-bottom: 15px; color: var(--gray-800);">Recommended Schedule</h3>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Age Milestone</th>
+                        <th>Recommended Date</th>
+                        <th>Vaccines Due</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="schedule-body">
+                    <!-- Calculated dates injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- GROWTH CHART TAB -->
+    <div id="growth-tab" class="tab-content hidden">
+        <div class="card">
+            <h3 style="margin-bottom: 15px; color: var(--gray-800);">Weight & Height Z-Scores (Birth to 5 Years)</h3>
+            <p style="margin-bottom: 20px;">The charts below present standard z-score lines matching your child's developmental milestones. Enter the current parameters to plot your child's positioning against WHO standard lines (-3, -2, 0, +2, +3).</p>
+            
+            <div class="charts-container">
+                <!-- Height-for-Age Chart -->
+                <div class="chart-box">
+                    <div class="chart-title">Length/Height-for-Age z-scores</div>
+                    <canvas id="heightChart" width="400" height="300"></canvas>
+                    <div id="height-info" class="info-panel">Enter values above to see your child's growth curve positioning.</div>
+                </div>
+
+                <!-- Weight-for-Age Chart -->
+                <div class="chart-box">
+                    <div class="chart-title">Weight-for-Age z-scores</div>
+                    <canvas id="weightChart" width="400" height="300"></canvas>
+                    <div id="weight-info" class="info-panel">Enter values above to see your child's growth curve positioning.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VITAMIN A & DE-WORMING TAB -->
+    <div id="supplements-tab" class="tab-content hidden">
+        <div class="card">
+            <h3 style="margin-bottom: 15px; color: var(--gray-800);">Routine Supplementation Schedules</h3>
+            <p style="margin-bottom: 25px;">Track Vitamin A doses and de-worming intervals dynamically mapped to your child's age milestones up to 59 months.</p>
+
+            <div class="info-card-grid">
+                <!-- Dosage Rules Card -->
+                <div class="info-sub-card">
+                    <h4>🍼 Vitamin A Dosages</h4>
+                    <ul style="margin-left: 20px; font-size: 0.9rem;">
+                        <li style="margin-bottom: 8px;"><strong>Below 12 months:</strong> 100,000 IU</li>
+                        <li><strong>12 months & above:</strong> 200,000 IU</li>
+                    </ul>
+                </div>
+                
+                <!-- De-worming Rules Card -->
+                <div class="info-sub-card">
+                    <h4>🐛 De-worming Guidelines (Every 6 Months)</h4>
+                    <ul style="margin-left: 20px; font-size: 0.9rem;">
+                        <li style="margin-bottom: 4px;"><strong>12-23 months:</strong> Albendazole (200 mg) ½ tablet</li>
+                        <li style="margin-bottom: 4px;"><strong>24-59 months:</strong> Albendazole (400 mg) 1 tablet</li>
+                        <li><strong>12-59 months (Alternative):</strong> Mebendazole (500 mg) 1 tablet</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- VITAMIN A SCHEDULE TABLE -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px; color: var(--primary-dark);">🍊 Vitamin A Supplementation Tracker</h3>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Age Range (months)</th>
+                        <th>Target Date Range</th>
+                        <th>Recommended Dosage</th>
+                        <th>Status / Window</th>
+                    </tr>
+                </thead>
+                <tbody id="vitamin-body">
+                    <!-- Vit A Rows -->
+                </tbody>
+            </table>
+
+            <!-- DE-WORMING SCHEDULE TABLE -->
+            <h3 style="margin-top: 40px; margin-bottom: 15px; color: #065f46;">🐛 De-worming Tracker</h3>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Age Range (months)</th>
+                        <th>Target Date Range</th>
+                        <th>Recommended Dosage</th>
+                        <th>Status / Window</th>
+                    </tr>
+                </thead>
+                <tbody id="deworming-body">
+                    <!-- Deworming Rows -->
+                </tbody>
+            </table>
+
+            <!-- MALARIA PREVENTION -->
+            <div class="malaria-card">
+                <div>
+                    <h4 style="color: #1e3a8a; margin-bottom: 4px;">🦟 LLIN for Malaria</h4>
+                    <p style="font-size: 0.85rem; color: #1e40af;">Long-Lasting Insecticidal Net provision status</p>
+                </div>
+                <div class="checkbox-container">
+                    <label for="llin-received" style="color: #1e40af;">Mark Net as Received:</label>
+                    <input type="checkbox" id="llin-received" style="width: 20px; height: 20px; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simplified WHO growth parameters (Birth to 60 Months)
+    const ageMilestonesMonths = [0, 6, 12, 18, 24, 36, 48, 60];
+
+    const growthData = {
+        girl: {
+            height: {
+                z3:  [54, 71, 80, 87, 93, 103, 112, 121],
+                z2:  [52, 69, 78, 85, 90, 100, 109, 117],
+                z0:  [49, 66, 74, 81, 86, 95, 103, 111],
+                zm2: [46, 61, 70, 76, 81, 90, 97, 105],
+                zm3: [44, 59, 68, 74, 79, 87, 94, 101]
+            },
+            weight: {
+                z3:  [4.8, 9.3, 11.5, 13.5, 15.4, 19.1, 23.5, 28.2],
+                z2:  [4.4, 8.5, 10.6, 12.4, 14.2, 17.6, 21.5, 25.8],
+                z0:  [3.2, 7.3, 8.9, 10.4, 12.0, 14.8, 18.0, 21.5],
+                zm2: [2.4, 5.8, 7.3, 8.6, 9.8, 12.2, 14.8, 17.7],
+                zm3: [2.0, 5.3, 6.7, 7.9, 9.0, 11.2, 13.5, 16.2]
+            }
+        },
+        boy: {
+            height: {
+                z3:  [55, 73, 82, 89, 95, 105, 114, 122],
+                z2:  [53, 71, 80, 87, 92, 102, 111, 119],
+                z0:  [50, 68, 76, 83, 88, 97, 105, 113],
+                zm2: [47, 63, 71, 78, 83, 91, 99, 106],
+                zm3: [45, 61, 69, 75, 80, 88, 95, 103]
+            },
+            weight: {
+                z3:  [5.0, 9.8, 12.0, 14.0, 16.0, 19.8, 24.2, 29.0],
+                z2:  [4.5, 9.0, 11.0, 12.9, 14.7, 18.2, 22.0, 26.3],
+                z0:  [3.3, 7.9, 9.6, 11.2, 12.7, 15.6, 18.8, 22.4],
+                zm2: [2.5, 6.4, 7.8, 9.2, 10.4, 12.7, 15.2, 18.3],
+                zm3: [2.1, 5.7, 7.1, 8.4, 9.5, 11.6, 13.9, 16.7]
+            }
+        }
+    };
+
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.remove('hidden');
+        btn.classList.add('active');
+
+        if (tabId === 'growth-tab') {
+            drawCharts();
+        }
+    }
+
+    function onDobChange() {
+        processAll();
+    }
+
+    function processAll() {
+        calculateSchedule();
+        calculateSupplementSchedules();
+        drawCharts();
+    }
+
+    function formatDate(date) {
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear();
+        return `${d}/${m}/${y}`;
+    }
+
+    function addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+    }
+
+    function addMonths(date, months) {
+        const result = new Date(date);
+        result.setMonth(result.getMonth() + months);
+        return result;
+    }
+
+    function calculateAgeInMonths(dob) {
+        const today = new Date();
+        let months = (today.getFullYear() - dob.getFullYear()) * 12;
+        months -= dob.getMonth();
+        months += today.getMonth();
+        return Math.max(0, months);
+    }
+
+    function calculateSchedule() {
+        const dobInput = document.getElementById('dob').value;
+        if (!dobInput) return;
+
+        const dob = new Date(dobInput);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        const milestones = [
+            { name: "At Birth", calc: (d) => d, vaccines: "BCG" },
+            { name: "0 - 14 Days", calc: (d) => d, vaccines: "OPV" },
+            { name: "At 6 Weeks", calc: (d) => addDays(d, 6 * 7), vaccines: "OPV 1, Rota 1, DPT-HepB-Hib 1, PCV 1" },
+            { name: "1 month after 1st dose (10 Weeks)", calc: (d) => addDays(d, 10 * 7), vaccines: "Rota 2, DPT-HepB-Hib 2, PCV 2, OPV 2" },
+            { name: "1 month after 2nd dose (14 Weeks)", calc: (d) => addDays(d, 14 * 7), vaccines: "OPV 3, DPT-HepB-Hib 3, PCV 3, IPV" },
+            { name: "At 5 Months", calc: (d) => addMonths(d, 5), vaccines: "MV1" },
+            { name: "At 6 Months", calc: (d) => addMonths(d, 6), vaccines: "MV2" },
+            { name: "At 7 Months", calc: (d) => addMonths(d, 7), vaccines: "MV3" },
+            { name: "9 - 11 Months", calc: (d) => addMonths(d, 9), vaccines: "Measles Rubella 1, TCV" },
+            { name: "15 - 23 Months", calc: (d) => addMonths(d, 15), vaccines: "Measles Rubella 2" },
+            { name: "22 - 36 Months", calc: (d) => addMonths(d, 22), vaccines: "MV4" }
+        ];
+
+        const tbody = document.getElementById('schedule-body');
+        tbody.innerHTML = '';
+
+        milestones.forEach(m => {
+            const targetDate = m.calc(dob);
+            let dateStr = formatDate(targetDate);
+            
+            if (m.name === "0 - 14 Days") {
+                dateStr = `${formatDate(dob)} to ${formatDate(addDays(dob, 14))}`;
+            } else if (m.name === "9 - 11 Months") {
+                dateStr = `${formatDate(targetDate)} to ${formatDate(addMonths(dob, 11))}`;
+            } else if (m.name === "15 - 23 Months") {
+                dateStr = `${formatDate(targetDate)} to ${formatDate(addMonths(dob, 23))}`;
+            } else if (m.name === "22 - 36 Months") {
+                dateStr = `${formatDate(targetDate)} to ${formatDate(addMonths(dob, 36))}`;
+            }
+
+            let statusBadge = '';
+            if (targetDate < today) {
+                statusBadge = '<span class="badge-done">Already Due / Administered</span>';
+            } else if (targetDate.toDateString() === today.toDateString()) {
+                statusBadge = '<span class="badge-due">Due Today!</span>';
+            } else {
+                statusBadge = '<span class="badge-upcoming">Upcoming</span>';
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${m.name}</strong></td>
+                <td><strong>${dateStr}</strong></td>
+                <td>${m.vaccines}</td>
+                <td>${statusBadge}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('results-card').classList.remove('hidden');
+    }
+
+    function calculateSupplementSchedules() {
+        const dobInput = document.getElementById('dob').value;
+        if (!dobInput) return;
+
+        const dob = new Date(dobInput);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        // Vitamin A Age Ranges (Months)
+        const vitAMilestones = [
+            { min: 6, max: 11, dose: "100,000 IU" },
+            { min: 12, max: 17, dose: "200,000 IU" },
+            { min: 18, max: 23, dose: "200,000 IU" },
+            { min: 24, max: 29, dose: "200,000 IU" },
+            { min: 30, max: 35, dose: "200,000 IU" },
+            { min: 36, max: 41, dose: "200,000 IU" },
+            { min: 42, max: 47, dose: "200,000 IU" },
+            { min: 48, max: 53, dose: "200,000 IU" },
+            { min: 54, max: 59, dose: "200,000 IU" }
+        ];
+
+        // De-worming Age Ranges (Months)
+        const dewormingMilestones = [
+            { min: 12, max: 17, dose: "Albendazole (200 mg) ½ tab OR Mebendazole (500 mg) 1 tab" },
+            { min: 18, max: 23, dose: "Albendazole (200 mg) ½ tab OR Mebendazole (500 mg) 1 tab" },
+            { min: 24, max: 29, dose: "Albendazole (400 mg) 1 tab OR Mebendazole (500 mg) 1 tab" },
+            { min: 30, max: 35, dose: "Albendazole (400 mg) 1 tab OR Mebendazole (500 mg) 1 tab" },
+            { min: 36, max: 41, dose: "Albendazole (400 mg) 1 tab OR Mebendazole (500 mg) 1 tab" },
+            { min: 42, max: 47, dose: "Albendazole (400 mg) 1 tab OR Mebendazole (500 mg) 1 tab" },
+            { min: 48, max: 53, dose: "Albendazole (400 mg) 1 tab OR Mebendazole (500 mg) 1 tab" },
+            { min: 54, max: 59, dose: "Albendazole (400 mg) 1 tab OR Mebendazole (500 mg) 1 tab" }
+        ];
+
+        const generateTableRows = (milestones, bodyId) => {
+            const tbody = document.getElementById(bodyId);
+            tbody.innerHTML = '';
+
+            milestones.forEach(m => {
+                const startDate = addMonths(dob, m.min);
+                const endDate = addMonths(dob, m.max + 1); // up to the end of the max month
+                
+                let statusBadge = '';
+                if (today >= endDate) {
+                    statusBadge = '<span class="badge-done">Time Window Passed</span>';
+                } else if (today >= startDate && today < endDate) {
+                    statusBadge = '<span class="badge-current">Eligible Now / Give Dose</span>';
+                } else {
+                    statusBadge = '<span class="badge-upcoming">Upcoming</span>';
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${m.min} – ${m.max} Months</strong></td>
+                    <td>${formatDate(startDate)} to ${formatDate(endDate)}</td>
+                    <td>${m.dose}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        generateTableRows(vitAMilestones, 'vitamin-body');
+        generateTableRows(dewormingMilestones, 'deworming-body');
+    }
+
+    function drawCharts() {
+        const dobInput = document.getElementById('dob').value;
+        if (!dobInput) return;
+
+        const dob = new Date(dobInput);
+        const ageMonths = calculateAgeInMonths(dob);
+        const gender = document.getElementById('gender').value;
+        const currentHeight = parseFloat(document.getElementById('height').value);
+        const currentWeight = parseFloat(document.getElementById('weight').value);
+
+        const dataSet = growthData[gender];
+
+        renderCanvasChart("heightChart", "Height (cm)", ageMilestonesMonths, dataSet.height, ageMonths, currentHeight, 40, 130);
+        renderCanvasChart("weightChart", "Weight (kg)", ageMilestonesMonths, dataSet.weight, ageMonths, currentWeight, 0, 32);
+
+        updateInfoPanel(ageMonths, currentHeight, currentWeight, dataSet);
+    }
+
+    function renderCanvasChart(canvasId, yLabel, xVal, yLines, childAge, childVal, yMin, yMax) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const padding = 40;
+        const width = canvas.width - 2 * padding;
+        const height = canvas.height - 2 * padding;
+
+        const getX = (m) => padding + (m / 60) * width;
+        const getY = (val) => padding + height - ((val - yMin) / (yMax - yMin)) * height;
+
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        for (let m = 0; m <= 60; m += 12) {
+            ctx.beginPath();
+            ctx.moveTo(getX(m), padding);
+            ctx.lineTo(getX(m), padding + height);
+            ctx.stroke();
+
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '10px sans-serif';
+            ctx.fillText(m + 'm', getX(m) - 8, padding + height + 15);
+        }
+
+        const drawLine = (data, color, label) => {
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < xVal.length; i++) {
+                const x = getX(xVal[i]);
+                const y = getY(data[i]);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = color;
+            ctx.font = '10px sans-serif';
+            ctx.fillText(label, getX(60) + 5, getY(data[data.length - 1]) + 3);
+        };
+
+        drawLine(yLines.z3, '#b91c1c', '+3');
+        drawLine(yLines.z2, '#d97706', '+2');
+        drawLine(yLines.z0, '#059669', '0');
+        drawLine(yLines.zm2, '#d97706', '-2');
+        drawLine(yLines.zm3, '#b91c1c', '-3');
+
+        if (!isNaN(childVal) && childAge <= 60) {
+            const cx = getX(childAge);
+            const cy = getY(childVal);
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+            ctx.fillStyle = '#2563eb';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#1e3a8a';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillText(`Your Child (${childVal})`, cx + 8, cy - 8);
+        }
+    }
+
+    function updateInfoPanel(age, height, weight, dataset) {
+        const hPanel = document.getElementById('height-info');
+        const wPanel = document.getElementById('weight-info');
+
+        if (!isNaN(height)) {
+            let status = "Healthy Range";
+            let color = "var(--success)";
+            
+            const closestIdx = getClosestMilestoneIndex(age);
+            const z0 = dataset.height.z0[closestIdx];
+            const zm2 = dataset.height.zm2[closestIdx];
+
+            if (height < zm2) {
+                status = "Underheight / Short Stature (-2 SD)";
+                color = "var(--danger)";
+            }
+            hPanel.innerHTML = `At ${age} months, height of <strong>${height} cm</strong> ranks as: <span style="color: ${color}; font-weight: bold;">${status}</span>`;
+        } else {
+            hPanel.innerHTML = "Enter height above to evaluate status against standard WHO curves.";
+        }
+
+        if (!isNaN(weight)) {
+            let status = "Healthy Weight";
+            let color = "var(--success)";
+
+            const closestIdx = getClosestMilestoneIndex(age);
+            const z0 = dataset.weight.z0[closestIdx];
+            const zm2 = dataset.weight.zm2[closestIdx];
+
+            if (weight < zm2) {
+                status = "Underweight (-2 SD)";
+                color = "var(--danger)";
+            }
+            wPanel.innerHTML = `At ${age} months, weight of <strong>${weight} kg</strong> ranks as: <span style="color: ${color}; font-weight: bold;">${status}</span>`;
+        } else {
+            wPanel.innerHTML = "Enter weight above to evaluate status against standard WHO curves.";
+        }
+    }
+
+    function getClosestMilestoneIndex(age) {
+        let minDiff = Infinity;
+        let index = 0;
+        ageMilestonesMonths.forEach((m, idx) => {
+            const diff = Math.abs(m - age);
+            if (diff < minDiff) {
+                minDiff = diff;
+                index = idx;
+            }
+        });
+        return index;
+    }
+</script>
+
+</body>
+</html>
